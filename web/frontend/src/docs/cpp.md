@@ -46,7 +46,7 @@ string decide(const GameState& state) {
 
 int main() {
     // 1. 连接到服务器
-    CodingSnake game("http://CodingSnake.seveoi.icu:18080"); //我们的服务器地址
+    CodingSnake game("http://csapi.seveoi.icu:18080"); //我们的服务器地址
 
     // 2. 登录（把 "uid" 和 "paste" 换成你的）
     game.login("your_uid", "your_paste");
@@ -92,7 +92,7 @@ string decide(const GameState& state) {
 int main() {
     srand(time(0));
 
-    CodingSnake game("http://CodingSnake.seveoi.icu:18080");
+    CodingSnake game("http://csapi.seveoi.icu:18080");
     game.login("your_uid", "your_paste");
     game.join("RandomBot");
     game.run(decide);
@@ -189,8 +189,8 @@ string decide(const GameState& state) {
 
 int main() {
     try {
-        CodingSnake game("http://CodingSnake.seveoi.icu:18080");
-        game.login("test1001", "demo_paste");
+        CodingSnake game("http://csapi.seveoi.icu:18080");
+        game.login("uid", "paste");
         game.join("GreedyBot", "#00D9FF"); // 可以指定颜色
         game.setVerbose(true);            // 开启详细日志，方便调试
         
