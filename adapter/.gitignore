@@ -1,0 +1,33 @@
+# 构建目录
+build/
+cmake-build-*/
+dist/
+
+# 编译输出
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+
+# 示例程序编译产物
+examples/simple_bot
+examples/random_bot
+examples/smart_bot
+examples/*.exe
+
+# IDE配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# 环境和日志
+.env
+.env.local
+*.log
+.cache/
+*.tmp

@@ -1,0 +1,52 @@
+{
+  "server": {
+    "port": 18080,
+    "threads": 4
+  },
+  "game": {
+    "map_width": 50,
+    "map_height": 50,
+    "round_time_ms": 250,
+    "initial_snake_length": 3,
+    "invincible_rounds": 5,
+    "food_density": 0.05
+  },
+  "database": {
+    "path": "./data/snake.db",
+    "snapshot_interval": 10,
+    "snapshot_retention_hours": 24,
+    "backup_enabled": true,
+    "backup_interval_hours": 6
+  },
+  "rate_limits": {
+    "enabled": false,
+    "status_per_minute": 60,
+    "status_window_seconds": 60,
+    "login_per_hour": 10,
+    "login_window_seconds": 3600,
+    "join_per_minute": 5,
+    "join_window_seconds": 60,
+    "move_per_round": 1,
+    "map_per_second": 10,
+    "map_window_seconds": 1
+  },
+  "auth": {
+    "luogu_validation_text": "CodingSnake2026"
+  },
+  "leaderboard": {
+    "refresh_interval_rounds": 5,
+    "max_entries": 200,
+    "cache_ttl_seconds": 5
+  },
+  "performance_monitor": {
+    "enabled": true,
+    "sample_rate": 0.2,
+    "window_seconds": 60,
+    "max_samples": 2000,
+    "log_enabled": true,
+    "log_interval_seconds": 10,
+    "log_path": "./data/metrics.log",
+    "log_max_bytes": 5242880,
+    "log_max_files": 3
+  }
+}

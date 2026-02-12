@@ -1,0 +1,58 @@
+# 通用
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.env
+.env.local
+.vscode/settings.json
+.idea/
+
+# 构建产物
+build/
+build-*/
+cmake-build-*/
+dist/
+dist-ssr/
+
+# 节点和包管理
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+venv/
+env/
+.pytest_cache/
+
+# 日志
+*.log
+logs/
+
+# IDE配置（允许扩展列表）
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+*.swc
+
+# 操作系统
+.DS_Store
+.AppleDouble
+.LSOverride
+.env.local
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# 临时文件
+*.tmp
+*.temp
+.cache/

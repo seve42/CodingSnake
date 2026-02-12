@@ -1,0 +1,34 @@
+# 构建目录
+build/
+cmake-build-*/
+dist/
+
+# 编译输出
+*.o
+*.a
+*.so
+*.dylib
+*.exe
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# 测试输出
+test_*.log
+*.out
+
+# IDE配置
+.vscode/settings.json
+.idea/
+.DS_Store
+*.swp
+*.swo
+*~
+
+# 环境和临时文件
+.env
+.env.local
+*.tmp
+.cache/
