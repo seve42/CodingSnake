@@ -19,22 +19,6 @@ namespace snake {
  */
 bool Validator::validateLuoguPaste(const std::string& uid, const std::string& paste) {
     try {
-        // 0. 测试账号特判：uid 为 "test" + 数字时，跳过验证
-        if (uid.length() >= 5 && uid.substr(0, 4) == "test") {
-            // 检查后面是否全是数字
-            bool isTestAccount = true;
-            for (size_t i = 4; i < uid.length(); ++i) {
-                if (!std::isdigit(uid[i])) {
-                    isTestAccount = false;
-                    break;
-                }
-            }
-            if (isTestAccount) {
-                LOG_INFO("Test account detected, skipping validation: " + uid);
-                return true;
-            }
-        }
-        
         // 1. 基础参数验证
         if (!isValidUid(uid)) {
             LOG_WARNING("Invalid UID format: " + uid);
