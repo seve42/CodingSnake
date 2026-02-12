@@ -167,9 +167,11 @@ private:
     int map_width_;
     int map_height_;
     int current_round_;
+    long long next_round_timestamp_;
     
 public:
-    GameState() : map_width_(50), map_height_(50), current_round_(0) {}
+    GameState()
+        : map_width_(50), map_height_(50), current_round_(0), next_round_timestamp_(0) {}
     
     /**
      * @brief 设置我的玩家ID
@@ -188,6 +190,11 @@ public:
      * @brief 设置当前回合数
      */
     void setCurrentRound(int round) { current_round_ = round; }
+
+    /**
+     * @brief 设置下一回合时间戳（毫秒）
+     */
+    void setNextRoundTimestamp(long long ts) { next_round_timestamp_ = ts; }
     
     /**
      * @brief 获取我的蛇
@@ -245,6 +252,11 @@ public:
      * @brief 获取当前回合数
      */
     int getCurrentRound() const { return current_round_; }
+
+    /**
+     * @brief 获取下一回合时间戳（毫秒）
+     */
+    long long getNextRoundTimestamp() const { return next_round_timestamp_; }
     
     /**
      * @brief 检查位置是否在地图内
@@ -457,6 +469,7 @@ public:
         log("INFO", "游戏开始！");
         
         int move_count = 0;
+        int last_decision_round = -1;
         
         try {
             while (true) {
@@ -471,11 +484,18 @@ public:
                     if (config_.auto_respawn) {
                         log("WARNING", "已死亡，准备重生...");
                         respawn();
+                        last_decision_round = -1;
                         continue;
                     } else {
                         log("INFO", "游戏结束");
                         break;
                     }
+                }
+
+                const int current_round = state_.getCurrentRound();
+                if (current_round == last_decision_round) {
+                    waitForNextRoundWindow();
+                    continue;
                 }
                 
                 // 调用用户的决策函数
@@ -498,9 +518,12 @@ public:
                             " | Moves: " + std::to_string(move_count));
                     }
                 }
+
+                // 每个回合最多决策并提交一次，避免重复提交导致429
+                last_decision_round = current_round;
                 
-                // 等待下一回合
-                std::this_thread::sleep_for(std::chrono::milliseconds(round_time_ms_));
+                // 根据服务器时间戳对齐到下一回合窗口，避免固定sleep导致时序漂移
+                waitForNextRoundWindow();
             }
         } catch (const std::exception& e) {
             log("ERROR", string("游戏循环异常: ") + e.what());
@@ -654,6 +677,9 @@ private:
      */
     void parseFullMapState(const json& map_state) {
         state_.setCurrentRound(map_state["round"].get<int>());
+        if (map_state.contains("next_round_timestamp")) {
+            state_.setNextRoundTimestamp(map_state["next_round_timestamp"].get<long long>());
+        }
         
         // 清空并重建玩家列表
         state_.clearPlayers();
@@ -692,6 +718,9 @@ private:
      */
     void parseDeltaState(const json& delta) {
         int new_round = delta["round"].get<int>();
+        if (delta.contains("next_round_timestamp")) {
+            state_.setNextRoundTimestamp(delta["next_round_timestamp"].get<long long>());
+        }
         
         // 检查是否丢帧
         if (new_round > state_.getCurrentRound() + 1) {
@@ -810,6 +839,30 @@ private:
         }
         
         return data["code"].get<int>() == 0;
+    }
+
+    /**
+     * @brief 睡眠到下一回合前的小窗口
+     */
+    void waitForNextRoundWindow() {
+        const long long next_ts = state_.getNextRoundTimestamp();
+        const int safety_ms = 15;
+
+        if (next_ts <= 0) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(std::max(5, round_time_ms_ / 4)));
+            return;
+        }
+
+        auto now = std::chrono::system_clock::now();
+        long long now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+            now.time_since_epoch()).count();
+
+        long long wait_ms = next_ts - now_ms - safety_ms;
+        if (wait_ms > 0) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(wait_ms));
+        } else {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
     }
     
     /**
