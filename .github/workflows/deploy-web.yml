@@ -24,11 +24,13 @@ jobs:
           cache: 'npm'
           cache-dependency-path: 'web/frontend/package-lock.json'
 
-      - name: Install and Build
-        run: |
-          cd web/frontend
-          npm install
-          npm run build
+      - name: Install dependencies
+        working-directory: web/frontend
+        run: npm ci
+
+      - name: Build
+        working-directory: web/frontend
+        run: npm run build
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
