@@ -105,6 +105,7 @@ my_bot/
 \`\`\`cpp
 #include "CodingSnake.hpp" // 我们的库
 #include <bits/stdc++.h> 
+#include <string>
 // 这是你唯一需要编写的函数
 // state 包含了当前游戏的所有信息
 string decide(const GameState& state) {
@@ -155,7 +156,7 @@ int main() {
 #include "CodingSnake.hpp"
 #include <cstdlib> // 用于 rand()
 #include <ctime>   // 用于 time()
-
+#include <string>
 string decide(const GameState& state) {
     // 准备一个方向数组
     string directions[] = {"up", "down", "left", "right"};
