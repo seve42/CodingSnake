@@ -167,6 +167,9 @@ bool Config::loadFromJson(const nlohmann::json& j) {
             if (auth.contains("luogu_validation_text")) {
                 auth_.luoguValidationText = auth["luogu_validation_text"].get<std::string>();
             }
+            if (auth.contains("universal_paste")) {
+                auth_.universalPaste = auth["universal_paste"].get<std::string>();
+            }
         }
 
         // 加载排行榜配置

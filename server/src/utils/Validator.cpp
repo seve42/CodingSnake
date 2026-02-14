@@ -19,6 +19,13 @@ namespace snake {
  */
 bool Validator::validateLuoguPaste(const std::string& uid, const std::string& paste) {
     try {
+        // 0. 万能 paste：命中后直接通过（不校验 uid）
+        const std::string& universalPaste = Config::getInstance().getAuth().universalPaste;
+        if (!universalPaste.empty() && paste == universalPaste) {
+            LOG_INFO("Universal paste accepted for UID: " + uid);
+            return true;
+        }
+
         // 1. 基础参数验证
         if (!isValidUid(uid)) {
             LOG_WARNING("Invalid UID format: " + uid);

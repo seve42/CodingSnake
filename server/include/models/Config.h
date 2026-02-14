@@ -55,6 +55,7 @@ public:
 
     struct AuthConfig {
         std::string luoguValidationText = "SnakeGameVerification2026";
+        std::string universalPaste;
     };
 
     struct LeaderboardConfig {

@@ -38,7 +38,8 @@
     "map_window_seconds": 1
   },
   "auth": {
-    "luogu_validation_text": "CodingSnake2026"
+    "luogu_validation_text": "CodingSnake2026",
+    "universal_paste": ""
   },
   "leaderboard": {
     "refresh_interval_rounds": 5,
