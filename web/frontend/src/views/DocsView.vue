@@ -37,8 +37,9 @@ import cppDoc from '@/docs/cpp.md?raw'
 import pythonDoc from '@/docs/python.md?raw'
 import rustDoc from '@/docs/rust.md?raw'
 import rulesDoc from '@/docs/rules.md?raw'
+import announcementDoc from '@/docs/announcement.md?raw'
 
-type DocKey = 'cpp' | 'python' | 'rust' | 'rules'
+type DocKey = 'announcement' | 'cpp' | 'python' | 'rust' | 'rules'
 
 type DocOption = {
   key: DocKey
@@ -48,6 +49,12 @@ type DocOption = {
 }
 
 const docOptions: DocOption[] = [
+  {
+    key: 'announcement',
+    label: '公告',
+    path: 'src/docs/announcement.md',
+    content: announcementDoc,
+  },
   {
     key: 'cpp',
     label: 'C++ 文档',
@@ -74,7 +81,7 @@ const docOptions: DocOption[] = [
   },
 ]
 
-const selectedDocKey = ref<DocKey>('cpp')
+const selectedDocKey = ref<DocKey>('announcement')
 
 const docsByKey: Record<DocKey, DocOption> = docOptions.reduce(
   (accumulator, item) => {
