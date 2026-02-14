@@ -3,6 +3,7 @@
 #include "Snake.h"
 #include <string>
 #include <memory>
+#include <atomic>
 #include <nlohmann/json.hpp>
 
 namespace snake {
@@ -53,7 +54,7 @@ private:
     std::string key_;       // 账号级别令牌
     std::string token_;     // 游戏会话令牌
     Snake snake_;           // 蛇对象
-    bool inGame_;           // 是否在游戏中
+    std::atomic<bool> inGame_; // 是否在游戏中
 };
 
 } // namespace snake

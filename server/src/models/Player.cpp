@@ -178,7 +178,7 @@ void Player::initSnake(const Point& position, int initialLength) {
  * @return 如果玩家在游戏中返回 true
  */
 bool Player::isInGame() const {
-    return inGame_;
+    return inGame_.load(std::memory_order_acquire);
 }
 
 /**
@@ -191,7 +191,7 @@ bool Player::isInGame() const {
  * - 当设置为 false 时，同步更新蛇的状态以保证数据一致性
  */
 void Player::setInGame(bool inGame) {
-    inGame_ = inGame;
+    inGame_.store(inGame, std::memory_order_release);
     // 当玩家离开或被淘汰游戏时，同步杀死蛇，防止逻辑残留
     if (!inGame && snake_.isAlive()) {
         snake_.kill();
@@ -230,7 +230,7 @@ nlohmann::json Player::toJson() const {
     j["key"] = key_;
     j["token"] = token_;
     j["snake"] = snake_.toJson();
-    j["in_game"] = inGame_;
+    j["in_game"] = inGame_.load(std::memory_order_acquire);
     
     return j;
 }
