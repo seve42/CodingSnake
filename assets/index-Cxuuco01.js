@@ -333,6 +333,57 @@ int main() {
 
 ---
 
+##  常见问题
+
+### 链接器报错
+
+**问题**：编译时遇到链接器报错（通常会看到 \`undefined reference to\`、\`unresolved external symbol\` 等信息）。
+
+#### Dev-C++ 
+
+
+1. 在菜单栏点击 **工具 (Tools)** → **编译选项 (Compiler Options)**（或者如果是项目，选 **项目 (Project)** → **项目属性 (Project Options)**）
+2. 找到 **编译器时加入以下命令 (Add the following commands when calling the compiler)** 或者 **链接器 (Linker)** 选项卡
+3. 在框中输入以下内容（确保勾选该选项）：
+   \`\`\`
+   -lws2_32
+   \`\`\`
+   （注意：是小写的 L，不是数字 1，即 link ws2_32）
+4. 点击确定，重新编译即可
+
+#### VS Code (g++ / MinGW)
+
+你需要修改 \`.vscode\` 文件夹下的 \`tasks.json\` 文件。在 \`args\` 列表中添加 \`"-lws2_32"\`：
+
+\`\`\`json
+"args": [
+    "-fdiagnostics-color=always",
+    "-g",
+    "\${file}",
+    "-o",
+    "\${fileDirname}\\\\\${fileBasenameNoExtension}.exe",
+    "-lws2_32"  // 添加这一行，最好放在源文件参数之后
+],
+\`\`\`
+
+#### 命令行 (g++)
+
+在你的编译命令最后加上 \`-lws2_32\`：
+
+\`\`\`bash
+g++ C:/Users/71415/Desktop/untitled1.cpp -o untitled1.exe -lws2_32
+\`\`\`
+
+#### CMake
+
+在你的 \`CMakeLists.txt\` 文件中，找到 \`add_executable\` 之后，添加：
+
+\`\`\`cmake
+target_link_libraries(你的项目名称 ws2_32)
+\`\`\`
+
+---
+
 现在，你已经掌握了所有必要的知识。发挥你的智慧，编写出最强的贪吃蛇 AI 吧！
 `,Cy="",Ny="",Oy=`# 游戏规则
 
