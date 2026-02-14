@@ -41,6 +41,8 @@ private:
 
     // 辅助函数
     std::string getClientIp(const crow::request& req);
+    bool isLoopbackAddress(const std::string& ip) const;
+    bool isLoopbackRequest(const crow::request& req) const;
     bool checkRateLimit(const std::string& key, const std::string& endpoint);
     crow::response buildResponse(const nlohmann::json& jsonData);
     crow::response handleException(const std::exception& e);

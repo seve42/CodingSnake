@@ -31,7 +31,7 @@ crow::response RouteHandler::handleStatus(const crow::request& req) {
         PerformanceMonitor::ScopedRequest metricsGuard("status");
         // 检查速率限制
         std::string clientIp = getClientIp(req);
-        if (!checkRateLimit(clientIp, "status")) {
+        if (!isLoopbackRequest(req) && !checkRateLimit(clientIp, "status")) {
             LOG_WARNING("Rate limit exceeded for status endpoint from IP: " + clientIp);
             const auto& rateLimitConfig = Config::getInstance().getRateLimit();
             int retryAfter = rateLimiter_.getRetryAfter(
@@ -68,9 +68,10 @@ crow::response RouteHandler::handleStatus(const crow::request& req) {
 crow::response RouteHandler::handleLogin(const crow::request& req) {
     try {
         PerformanceMonitor::ScopedRequest metricsGuard("login");
+        const bool isLoopback = isLoopbackRequest(req);
         // 检查速率限制
         std::string clientIp = getClientIp(req);
-        if (!checkRateLimit(clientIp, "login")) {
+        if (!isLoopback && !checkRateLimit(clientIp, "login")) {
             LOG_WARNING("Rate limit exceeded for login endpoint from IP: " + clientIp);
             const auto& rateLimitConfig = Config::getInstance().getRateLimit();
             int retryAfter = rateLimiter_.getRetryAfter("login:" + clientIp, 
@@ -104,8 +105,8 @@ crow::response RouteHandler::handleLogin(const crow::request& req) {
             return buildResponse(ResponseBuilder::badRequest("uid and paste cannot be empty"));
         }
 
-        // 调用Validator验证洛谷身份
-        if (!Validator::validateLuoguPaste(uid, paste)) {
+        // 调用Validator验证洛谷身份（本地回环地址请求放行）
+        if (!isLoopback && !Validator::validateLuoguPaste(uid, paste)) {
             LOG_WARNING("Luogu validation failed for UID: " + uid);
             return buildResponse(ResponseBuilder::forbidden("authentication failed"));
         }
@@ -133,6 +134,7 @@ crow::response RouteHandler::handleLogin(const crow::request& req) {
 crow::response RouteHandler::handleJoin(const crow::request& req) {
     try {
         PerformanceMonitor::ScopedRequest metricsGuard("join");
+        const bool isLoopback = isLoopbackRequest(req);
         // 1. 解析请求参数
         nlohmann::json requestData;
         try {
@@ -171,7 +173,7 @@ crow::response RouteHandler::handleJoin(const crow::request& req) {
         }
 
         // 5. 速率限制检查（基于 key）
-        if (!checkRateLimit(key, "join")) {
+        if (!isLoopback && !checkRateLimit(key, "join")) {
             LOG_WARNING("Rate limit exceeded for join endpoint, key: " + key);
             const auto& rateLimitConfig = Config::getInstance().getRateLimit();
             int retryAfter = rateLimiter_.getRetryAfter("join:" + key, 
@@ -565,6 +567,23 @@ std::string RouteHandler::getClientIp(const crow::request& req) {
     // 如果没有代理头，使用远程地址
     // 注意：在Crow中可能需要其他方式获取远程地址
     return req.remote_ip_address;
+}
+
+bool RouteHandler::isLoopbackAddress(const std::string& ip) const {
+    if (ip == "127.0.0.1" || ip == "::1" || ip == "localhost") {
+        return true;
+    }
+
+    const std::string ipv6MappedPrefix = "::ffff:";
+    if (ip.rfind(ipv6MappedPrefix, 0) == 0) {
+        return ip.substr(ipv6MappedPrefix.size()) == "127.0.0.1";
+    }
+
+    return false;
+}
+
+bool RouteHandler::isLoopbackRequest(const crow::request& req) const {
+    return isLoopbackAddress(req.remote_ip_address);
 }
 
 bool RouteHandler::checkRateLimit(const std::string& key, const std::string& endpoint) {
