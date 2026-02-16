@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <random>
 #include <chrono>
+#include <atomic>
 #include <openssl/sha.h>
 
 namespace snake {
@@ -164,7 +165,7 @@ PlayerManager::JoinResult PlayerManager::join(const std::string& key,
         }
     }
 
-    // 5. 生成playerId和token
+    // 5. 生成playerId和token（playerId 使用单调序列，避免随机碰撞）
     /**
      * 会话管理核心逻辑
      * 
@@ -185,7 +186,29 @@ PlayerManager::JoinResult PlayerManager::join(const std::string& key,
      * token -> playerId -> Player
      */
     std::string playerId = generatePlayerId(uid);
-    std::string token = generateToken(playerId);
+    while (players_.find(playerId) != players_.end()) {
+        // 理论上不会触发：generatePlayerId 使用进程内全局单调序列
+        LOG_WARNING("PlayerId collision detected, regenerating: " + playerId);
+        playerId = generatePlayerId(uid);
+    }
+
+    constexpr int kMaxGenerateAttempts = 128;
+
+    std::string token;
+    for (int attempt = 0; attempt < kMaxGenerateAttempts; ++attempt) {
+        std::string candidate = generateToken(playerId);
+        if (tokenToPlayerId_.find(candidate) == tokenToPlayerId_.end()) {
+            token = std::move(candidate);
+            break;
+        }
+        LOG_WARNING("Token collision detected, regenerating token for playerId=" + playerId);
+    }
+
+    if (token.empty()) {
+        result.errorMsg = "failed to allocate session token";
+        LOG_ERROR("Join failed: unable to allocate unique token for playerId=" + playerId);
+        return result;
+    }
 
     // 6. 创建玩家对象
     auto player = std::make_shared<Player>(uid, name, playerColor);
@@ -507,20 +530,22 @@ std::string PlayerManager::generatePlayerId(const std::string& uid) {
      * 2. 可读性强，便于日志和调试
      * 3. 包含用户ID信息，方便追溯
      * 
-     * 生成策略：
-     * - 格式：p_{uid}_{6位随机数}
-     * - 示例：p_123456_789012
+    * 生成策略：
+    * - 格式：p_{uid}_{单调序列}
+    * - 示例：p_123456_1708065300123456
      * 
      * 设计考虑：
      * - 前缀 "p_" 标识这是一个 playerId
      * - uid 部分便于快速识别是哪个用户
-     * - 随机数部分确保同一用户多次加入时 ID 不重复
+     * - 单调序列在同一进程内保证不会重复
      */
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dis(100000, 999999);
-    
-    std::string playerId = "p_" + uid + "_" + std::to_string(dis(gen));
+    const uint64_t seed = static_cast<uint64_t>(
+        std::chrono::steady_clock::now().time_since_epoch().count()
+    );
+    static std::atomic<uint64_t> nextPlayerSeq(seed);
+
+    const uint64_t seq = nextPlayerSeq.fetch_add(1, std::memory_order_relaxed);
+    std::string playerId = "p_" + uid + "_" + std::to_string(seq);
     LOG_DEBUG("Generated playerId=" + playerId + " for uid=" + uid);
     
     return playerId;
