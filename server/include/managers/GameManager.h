@@ -58,6 +58,7 @@ private:
     void updateInvincibility();
     void addSnakeToOccupancy(const Snake& snake);
     void removeSnakeFromOccupancy(const Snake& snake);
+    void createSnakeDeathDrops(std::vector<Point> pos);
 
     std::shared_ptr<MapManager> mapManager_;
     std::shared_ptr<PlayerManager> playerManager_;

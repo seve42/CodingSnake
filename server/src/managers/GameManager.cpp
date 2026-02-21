@@ -606,6 +606,8 @@ void GameManager::removeSnakeFromOccupancy(const Snake& snake) {
         return;
     }
 
+    createSnakeDeathDrops(snake.getBlocks()); // 添加蛇被移除时掉落的食物
+
     for (const auto& block : snake.getBlocks()) {
         auto it = occupiedCounts_.find(block);
         if (it != occupiedCounts_.end()) {
@@ -631,6 +633,18 @@ void GameManager::updateInvincibility() {
                     LOG_INFO("Player " + player->getId() + " invincibility expired");
                 }
             }
+        }
+    }
+}
+
+void GameManager::createSnakeDeathDrops(std::vector<Point> pos)
+{
+    for (auto p : pos)
+    {
+        if (!gameState_.hasFoodAt(p))
+        {
+            gameState_.trackFoodAdded(p);
+            gameState_.addFood(Food(p));
         }
     }
 }
