@@ -43,6 +43,8 @@ public:
     GameState getGameState() const;
     int getCurrentRound() const;
     nlohmann::json getDeltaState() const;
+    // 在锁内直接序列化 JSON，避免深拷贝整个 GameState
+    nlohmann::json getGameStateJson() const;
 
     // 玩家管理
     bool addPlayer(std::shared_ptr<Player> player);

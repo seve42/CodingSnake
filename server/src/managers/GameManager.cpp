@@ -157,6 +157,13 @@ GameState GameManager::getGameState() const {
     return gameState_;
 }
 
+nlohmann::json GameManager::getGameStateJson() const {
+    auto lock = lockWithMetrics(stateMutex_, "GameManager.state");
+    nlohmann::json j;
+    gameState_.toJsonOptimized(j);
+    return j;
+}
+
 int GameManager::getCurrentRound() const {
     auto lock = lockWithMetrics(stateMutex_, "GameManager.state");
     return gameState_.getCurrentRound();
@@ -279,7 +286,9 @@ void GameManager::gameLoop() {
 }
 
 void GameManager::processMovements() {
-    auto moveLock = lockWithMetrics(movesMutex_, "GameManager.moves");
+    // 注意：nextMoves_ 已在 tick() 步骤 0 中由 movesMutex_ 保护下填充，
+    // 此后只被游戏循环线程访问，无需再持有 movesMutex_。
+    // 只需 stateMutex_ 保护游戏状态的读写。
     auto stateLock = lockWithMetrics(stateMutex_, "GameManager.state");
 
     // 清空上一回合的自撞预判
@@ -498,6 +507,11 @@ void GameManager::checkCollisions() {
                 default: reason = "unknown"; break;
             }
             LOG_INFO("Player " + player->getId() + " (" + player->getName() + ") died: " + reason);
+
+            // 从游戏状态中移除死亡玩家，防止 players_ 无限增长
+            gameState_.removePlayer(playerId);
+            // 清理 PlayerManager 中的会话数据（token、Player 对象），防止内存泄漏
+            playerManager_->removePlayer(playerId);
         }
     }
 

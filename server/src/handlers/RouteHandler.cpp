@@ -235,16 +235,15 @@ crow::response RouteHandler::handleJoin(const crow::request& req) {
             return buildResponse(ResponseBuilder::internalError("failed to join game"));
         }
 
-        // 11. 获取初始地图状态
-        GameState currentState = gameManager_->getGameState();
-        nlohmann::json mapStateJson = currentState.toJson();
+        // 11. 获取初始地图状态（在锁内直接序列化，避免深拷贝）
+        nlohmann::json mapStateJson = gameManager_->getGameStateJson();
 
         // 12. 构造成功响应
         nlohmann::json data = {
             {"token", joinResult.token},
             {"id", joinResult.playerId},
             {"initial_direction", DirectionUtils::toString(initialDirection)},
-            {"map_state", mapStateJson}
+            {"map_state", std::move(mapStateJson)}
         };
 
         LOG_INFO("Player successfully joined: UID=" + uid + ", Name=" + name + 
@@ -260,13 +259,12 @@ crow::response RouteHandler::handleJoin(const crow::request& req) {
 crow::response RouteHandler::handleGetMap(const crow::request& req) {
     try {
         PerformanceMonitor::ScopedRequest metricsGuard("map");
-        // 直接获取游戏状态，无需token验证
-        GameState currentState = gameManager_->getGameState();
-        nlohmann::json mapStateJson = currentState.toJson();
+        // 直接在锁内序列化 JSON，避免深拷贝整个 GameState
+        nlohmann::json mapStateJson = gameManager_->getGameStateJson();
         
         // 5. 构造响应
         nlohmann::json data = {
-            {"map_state", mapStateJson}
+            {"map_state", std::move(mapStateJson)}
         };
         
         LOG_DEBUG("Map state requested (no token required)");
@@ -590,6 +588,13 @@ bool RouteHandler::checkRateLimit(const std::string& key, const std::string& end
     const auto& rateLimitConfig = Config::getInstance().getRateLimit();
     if (!rateLimitConfig.enabled) {
         return true;
+    }
+    
+    // 定期清理过期的 RateLimiter 记录（每 5 分钟）
+    auto now = std::chrono::steady_clock::now();
+    if (now - lastRateLimiterCleanup_ > std::chrono::minutes(5)) {
+        lastRateLimiterCleanup_ = now;
+        rateLimiter_.cleanup();
     }
     
     if (endpoint == "status") {

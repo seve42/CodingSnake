@@ -9,6 +9,7 @@
 #include <crow.h>
 #include <crow/middlewares/cors.h>
 #include <memory>
+#include <chrono>
 
 namespace snake {
 
@@ -52,6 +53,9 @@ private:
     std::shared_ptr<MapManager> mapManager_;
     std::shared_ptr<LeaderboardManager> leaderboardManager_;
     RateLimiter rateLimiter_;
+    
+    // RateLimiter 定期清理：上次清理时间
+    std::chrono::steady_clock::time_point lastRateLimiterCleanup_ = std::chrono::steady_clock::now();
 };
 
 // 模板函数实现必须在头文件中
